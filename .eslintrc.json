@@ -55,6 +55,10 @@
         "@typescript-eslint/promise-function-async": 0,
         "@typescript-eslint/restrict-plus-operands": 0,
         "@typescript-eslint/unbound-method": 0,
+        "@typescript-eslint/no-namespace": [
+          "error",
+          { "allowDeclarations": true }
+        ],
         "eqeqeq": 0,
         "n/handle-callback-err": 0,
         "no-extra-boolean-cast": 0,
