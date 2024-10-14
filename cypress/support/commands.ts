@@ -1,40 +1,44 @@
-/*
-/// <reference types="cypress" />
-*/
-import 'cypress'
+// /// <reference types="cypress" />
 
-declare global {
-  namespace Cypress {
-    interface Chainable {
-      login: (u: string, p: string) => void
-    }
-  }
-}
+// export {}
+// declare global {
+//   namespace Cypress {
+//     interface Chainable<Subject> {
+//       login: (u: string, p: string) => void
+//     }
+//   }
+// }
 
-Cypress.Commands.add('login', (username, password) => {
-  console.log({ username, password })
+// Cypress.Commands.add('login', (username, password) => {
+//   // creating a session for user login
+//   cy.session(
+//     [username, password],
+//     () => {
+//       cy.visit('http://localhost:3001')
 
-  // // creating a session for user login
-  // cy.session([username, password], () => {})
-  // // Mocking the Keycloak redirection
-  // cy.intercept('GET', '**/auth/*', (req) => {
-  //   // Mocking the Keycloak login response
-  //   req.reply((res) => {
-  //     // Set any headers, status codes, or response body you want
-  //     res.send({
-  //       statusCode: 200,
-  //       body: {
-  //         access_token: 'mocked_access_token',
-  //         refresh_token: 'mocked_refresh_token',
-  //       },
-  //     })
-  //   })
-  // }).as('keycloakLogin')
-  // // Simulate successful login by setting local storage or cookies
-  // cy.window().then((win) => {
-  //   // Set mocked Keycloak tokens in local storage
-  //   win.localStorage.setItem('keycloak.token', 'mocked_access_token')
-  //   win.localStorage.setItem('keycloak.refreshToken', 'mocked_refresh_token')
-  //   // win.localStorage.setItem('keycloak.authenticated', true)
-  // })
-})
+//       // Perform login on Keycloak login page
+//       cy.origin(
+//         'TODO: replace keycloak login url',
+//         () => {
+//           // Click the login button to be redirected to Keycloak
+//           cy.get('input[placeholder="Enter your company name"]').type(
+//             'CX-operator'
+//           ) // Update selector based on your app
+
+//           cy.get('li').find('div').contains('CX-Operator').click()
+//         }
+//       )
+
+//       cy.origin(
+//         'TODO: replace keycloak shared idp url',
+//         { args: { username, password } },
+//         ({ username, password }) => {
+//           cy.get('#username').should('exist').type(username)
+//           cy.get('#password').type(password)
+//           cy.get('#kc-login').click() // Submit the Keycloak form
+//         }
+//       )
+//     },
+//     { cacheAcrossSpecs: true }
+//   )
+// })
