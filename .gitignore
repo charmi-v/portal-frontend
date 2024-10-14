@@ -9,6 +9,7 @@ storybook
 *.tar.gz
 *.ignore
 .DS_Store
+cypress.env.json
 
 # Add legal info files during build
 

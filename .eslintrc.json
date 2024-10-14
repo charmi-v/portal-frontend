@@ -29,6 +29,7 @@
         "semi": ["error", "never"],
         "comma-dangle": 0,
         "react/react-in-jsx-scope": 0,
+        "@typescript-eslint/triple-slash-reference": "off",
         "@typescript-eslint/comma-dangle": 0,
         "@typescript-eslint/explicit-function-return-type": 0,
         "@typescript-eslint/ban-types": 0,
