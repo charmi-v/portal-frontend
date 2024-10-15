@@ -9,6 +9,14 @@ describe('Validate user management', { viewportWidth: 1500 }, () => {
   // Intercept the Keycloak login request
   beforeEach(() => {
     cy.login(Cypress.env('admin').email, Cypress.env('admin').password)
+
+    cy.intercept(
+      'POST',
+      `${Cypress.env('backendUrl')}/api/administration/user/owncompany/users`,
+      {
+        fixture: 'newUser.json',
+      }
+    )
   })
 
   it('redirect to user management page using header navigation', () => {
@@ -41,6 +49,30 @@ describe('Validate user management', { viewportWidth: 1500 }, () => {
       .click()
       .url()
       .should('include', '/userdetails')
+  })
+
+  it('register a new user', () => {
+    cy.visit(`${baseUrl}/userManagement`)
+      .get('#identity-management-id')
+      .should('exist')
+      .get('.MuiCircularProgress-root')
+      .should('not.exist')
+
+    cy.get('.MuiBox-root')
+      .find('button')
+      .contains('Add user', { matchCase: false })
+      .click()
+
+    cy.get('h2').contains('Add User Account')
+
+    cy.get('button').contains('Confirm').as('formSubmit').should('be.disabled')
+    cy.get('input[name="firstName"]').type('userFirstname')
+    cy.get('input[name="lastName"]').type('userLastname')
+    cy.get('input[name="email"]').type('user@example.com')
+
+    cy.contains('label', 'CX User').find('input[type=checkbox]').check()
+
+    cy.get('@formSubmit').should('not.be.disabled').click()
   })
 
   it('update the user details', () => {
