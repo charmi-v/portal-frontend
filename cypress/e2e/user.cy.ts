@@ -1,15 +1,11 @@
 /// <reference types="cypress" />
 
-// setting the viewport for desktop view
-describe('Validate user management', { viewportWidth: 1500 }, () => {
-  const baseUrl = Cypress.env('baseUrl')
-  const userEmail = Cypress.env('user').email
-  const userId = Cypress.env('user').id
+const baseUrl = Cypress.env('baseUrl')
+const userEmail = Cypress.env('user').email
 
-  // Intercept the Keycloak login request
+describe('User Account', { viewportWidth: 1500 }, () => {
   beforeEach(() => {
     cy.login(Cypress.env('admin').email, Cypress.env('admin').password)
-
     cy.intercept(
       'POST',
       `${Cypress.env('backendUrl')}/api/administration/user/owncompany/users`,
@@ -19,31 +15,27 @@ describe('Validate user management', { viewportWidth: 1500 }, () => {
     )
   })
 
-  it('redirect to user management page using header navigation', () => {
+  it('view company user accounts', () => {
+    // redirect to user management page using navigation menu
     cy.visit(baseUrl)
       .get('.cx-avatar .MuiSvgIcon-root[data-testid="PersonOutlineIcon"]')
       .click()
       .get('.cx-menu a')
       .contains('User Management')
       .click()
-      .url()
-      .should('include', '/userManagement')
-      .get('#identity-management-id')
-      .should('exist')
-  })
 
-  it('redirects to the user detail page', () => {
-    cy.visit(`${baseUrl}/userManagement`)
+    // validating the page url
+    cy.url()
+      .should('equal', `${baseUrl}/userManagement`)
       .get('#identity-management-id')
       .should('exist')
       .get('.MuiCircularProgress-root')
       .should('not.exist')
 
+    // search the account & navigate to user details page
     cy.wait(1000)
     cy.get('#identity-management-id [data-testid="SearchIcon"]').click()
-
     cy.get('input[placeholder="Enter email to search"]').type('charmi')
-
     cy.contains(' .MuiDataGrid-row', userEmail)
       .find('[data-field="details"] button')
       .click()
@@ -51,7 +43,7 @@ describe('Validate user management', { viewportWidth: 1500 }, () => {
       .should('include', '/userdetails')
   })
 
-  it('register a new user', () => {
+  it('create a new user account (single user)', () => {
     cy.visit(`${baseUrl}/userManagement`)
       .get('#identity-management-id')
       .should('exist')
@@ -74,8 +66,22 @@ describe('Validate user management', { viewportWidth: 1500 }, () => {
 
     cy.get('@formSubmit').should('not.be.disabled').click()
   })
+})
 
-  it('update the user details', () => {
+describe('Modify User Account', () => {
+  beforeEach(() => {
+    cy.login(Cypress.env('admin').email, Cypress.env('admin').password)
+  })
+
+  const userId = Cypress.env('user').id
+
+  it('summary page of user details', () => {
+    cy.visit(`${baseUrl}/userdetails/${userId}`)
+      .get('h6')
+      .should('contain', userEmail)
+  })
+
+  it('manage user assigned bpn', () => {
     cy.visit(`${baseUrl}/userdetails/${userId}`)
       .get('.MuiSvgIcon-root[data-testid="ModeEditOutlineOutlinedIcon"]')
       .click()
@@ -85,7 +91,6 @@ describe('Validate user management', { viewportWidth: 1500 }, () => {
           const isExists = [...elements].some((e) => {
             return e.textContent?.trim() === Cypress.env('user').bpn1
           })
-
           if (isExists) {
             cy.get('.MuiDialog-container')
               .contains(Cypress.env('user').bpn1)
@@ -104,3 +109,7 @@ describe('Validate user management', { viewportWidth: 1500 }, () => {
       .click()
   })
 })
+
+describe('Technical User', () => {})
+
+describe('Assign App Roles', () => {})
