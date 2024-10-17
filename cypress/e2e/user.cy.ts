@@ -65,6 +65,23 @@ describe('User Account', { viewportWidth: 1500 }, () => {
     cy.contains('label', 'CX User').find('input[type=checkbox]').check()
 
     cy.get('@formSubmit').should('not.be.disabled').click()
+
+    cy.get('h4').should('have.text', 'User added successfully')
+  })
+
+  it('create a new user account (bulk user)', () => {
+    cy.visit(`${baseUrl}/userManagement`)
+      .get('#identity-management-id')
+      .should('exist')
+      .get('.MuiCircularProgress-root')
+      .should('not.exist')
+
+    cy.get('.MuiBox-root')
+      .find('button')
+      .contains('Add multiple users', { matchCase: false })
+      .click()
+
+    cy.get('button').contains('Confirm').as('Submit').should('be.disabled')
   })
 })
 
@@ -107,6 +124,36 @@ describe('Modify User Account', () => {
       .get('.MuiDialog-container .cx-dialog__actions button')
       .should('have.text', 'Close')
       .click()
+  })
+
+  it('user permission - assigned portal role', () => {
+    cy.visit(`${baseUrl}/userdetails/${userId}`)
+      .get('button')
+      .filter(':contains("Change Portal Role")')
+      .click()
+
+    cy.get('h2').should('have.text', 'Manage User Assigned Portal Role(s)')
+    cy.get('button').contains('Confirm').as('SubmitBtn')
+
+    cy.get('@SubmitBtn').should('be.disabled')
+    cy.contains('label', 'App Developer').find('input[type="checkbox"]').click()
+    cy.get('@SubmitBtn').should('not.be.disabled').click()
+
+    cy.get('.MuiSnackbar-root')
+      .should('be.visible')
+      .then(() => {
+        cy.get('.MuiSnackbarContent-root').should(
+          'contain',
+          'Portal Role(s) successfully updated.'
+        )
+        cy.wait(7000)
+      })
+      .should('not.exist')
+
+    //reset the updated setting
+    cy.get('button').filter(':contains("Change Portal Role")').click()
+    cy.contains('label', 'App Developer').find('input[type="checkbox"]').click()
+    cy.get('@SubmitBtn').should('not.be.disabled').click()
   })
 })
 
