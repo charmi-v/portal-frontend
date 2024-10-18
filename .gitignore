@@ -10,6 +10,7 @@ storybook
 *.ignore
 .DS_Store
 cypress.env.json
+cypress/downloads
 
 # Add legal info files during build
 

@@ -14,8 +14,11 @@ describe('User Account', { viewportWidth: 1500 }, () => {
       }
     )
     cy.intercept(
-      'POST',
-      `${Cypress.env('backendUrl')}/api/administration/user/owncompany/usersfile`,
+      {
+        method: 'POST',
+        url: `${Cypress.env('backendUrl')}/api/administration/user/owncompany/usersfile`,
+        times: 1,
+      },
       {
         fixture: 'newUserMultiple.json',
       }
@@ -76,7 +79,7 @@ describe('User Account', { viewportWidth: 1500 }, () => {
     cy.get('h4').should('have.text', 'User added successfully')
   })
 
-  it.only('create a new user account (bulk user)', () => {
+  it('create a new user account (bulk user)', () => {
     cy.visit(`${baseUrl}/userManagement`)
       .get('#identity-management-id')
       .should('exist')
@@ -155,8 +158,40 @@ describe('User Account', { viewportWidth: 1500 }, () => {
       cy.contains('1')
       cy.contains('Users successfully uploaded')
     })
+    cy.contains('Close').click()
 
-    //TODO: validate error response
+    //error response - by recreating the same user
+    cy.get('.MuiBox-root')
+      .find('button')
+      .contains('Add multiple users', { matchCase: false })
+      .click()
+    cy.get('@fileInput').selectFile('cypress/docs/user-bulk-load.csv', {
+      force: true,
+    })
+    cy.get('@fileBrowse').should('have.css', 'pointer-events', 'none')
+    cy.get('@SubmitBtn').should('not.be.disabled').click()
+
+    cy.get('.documentMain')
+      .first()
+      .within(() => {
+        cy.contains('user-bulk-load.csv')
+      })
+    cy.get('.documentMain')
+      .eq(1)
+      .within(() => {
+        cy.contains('1')
+        cy.contains('users to be uploaded')
+      })
+
+    cy.contains('label', 'CX User').find('input[type=checkbox]').check()
+    cy.get('@SubmitBtn').should('not.be.disabled').click()
+
+    cy.get('p.errorUsersLabel')
+      .should('contain', 'Errors have occured for the following usernames:')
+      .and(
+        'contain',
+        'Please check their entries in the upload file and try upload it again.'
+      )
   })
 })
 
