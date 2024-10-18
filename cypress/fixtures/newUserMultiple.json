@@ -1,0 +1,13 @@
+{
+  "created": 1,
+  "error": 0,
+  "total": 1,
+  "errors": [],
+  "errors-dummy": [
+    {
+      "line": 1,
+      "message": "existing user userid in keycloak for provider userid , test@mailinator.com",
+      "details": []
+    }
+  ]
+}

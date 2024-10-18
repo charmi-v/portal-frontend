@@ -13,6 +13,13 @@ describe('User Account', { viewportWidth: 1500 }, () => {
         fixture: 'newUser.json',
       }
     )
+    cy.intercept(
+      'POST',
+      `${Cypress.env('backendUrl')}/api/administration/user/owncompany/usersfile`,
+      {
+        fixture: 'newUserMultiple.json',
+      }
+    )
   })
 
   it('view company user accounts', () => {
@@ -69,7 +76,7 @@ describe('User Account', { viewportWidth: 1500 }, () => {
     cy.get('h4').should('have.text', 'User added successfully')
   })
 
-  it('create a new user account (bulk user)', () => {
+  it.only('create a new user account (bulk user)', () => {
     cy.visit(`${baseUrl}/userManagement`)
       .get('#identity-management-id')
       .should('exist')
@@ -81,7 +88,75 @@ describe('User Account', { viewportWidth: 1500 }, () => {
       .contains('Add multiple users', { matchCase: false })
       .click()
 
-    cy.get('button').contains('Confirm').as('Submit').should('be.disabled')
+    // Step1: validate template download & read the file
+    cy.get('button').contains('Download template').click()
+    cy.readFile('cypress/downloads/user-bulk-load.csv')
+
+    // Step2: validate help redirect link
+    cy.get('.secondStep a')
+      .should('have.text', 'Guide on how to fill the template')
+      .should('have.attr', 'target', '_blank')
+      .should(
+        'have.attr',
+        'href',
+        '/documentation/?path=user%2F03.+User+Management%2F01.+User+Account%2F04.+Create+new+user+account+%28bulk%29.md'
+      )
+      .then((link) => {
+        cy.request(link.prop('href')).its('status').should('eq', 200)
+      })
+
+    cy.get('button').contains('Confirm').as('SubmitBtn').should('be.disabled')
+
+    // Step3: validate file upload
+    cy.get('input[type=file]').as('fileInput')
+    cy.get('.cx-drop__area').as('fileDroparea')
+    cy.get('a').contains('browse files').as('fileBrowse')
+
+    // input is invisible, so we need to skip Cypress UI checks
+    cy.get('@fileInput').selectFile('cypress/docs/test.txt', { force: true })
+    cy.get('.MuiAlert-message').contains('File type must be .csv')
+    cy.get('@SubmitBtn').should('be.disabled')
+
+    // use Cypress’ abilty to handle dropzones
+    cy.get('@fileDroparea').selectFile('cypress/docs/test.csv', {
+      action: 'drag-drop',
+    })
+    cy.snackbarAlert(
+      'Bulk Upload list format wrong. Missing or incorrect header line. Recheck the download file to retrieve the expected format'
+    )
+    cy.get('@SubmitBtn').should('be.disabled')
+    cy.get('@fileBrowse').should('have.css', 'pointer-events', 'none')
+    cy.get('[data-testid="DeleteOutlineIcon"]').click()
+
+    // make our input visible by invoking a jQuery function to it
+    cy.get('@fileInput').selectFile('cypress/docs/user-bulk-load.csv', {
+      force: true,
+    })
+    cy.get('@fileBrowse').should('have.css', 'pointer-events', 'none')
+    cy.get('@SubmitBtn').should('not.be.disabled').click()
+
+    cy.get('.documentMain')
+      .first()
+      .within(() => {
+        cy.contains('user-bulk-load.csv')
+      })
+    cy.get('.documentMain')
+      .eq(1)
+      .within(() => {
+        cy.contains('1')
+        cy.contains('users to be uploaded')
+      })
+
+    cy.contains('label', 'CX User').find('input[type=checkbox]').check()
+    cy.get('@SubmitBtn').should('not.be.disabled').click()
+
+    //success response
+    cy.get('.userDetailsMain').within(() => {
+      cy.contains('1')
+      cy.contains('Users successfully uploaded')
+    })
+
+    //TODO: validate error response
   })
 })
 

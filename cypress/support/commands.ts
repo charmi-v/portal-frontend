@@ -5,6 +5,7 @@ declare global {
   namespace Cypress {
     interface Chainable<Subject> {
       login: (u: string, p: string) => Chainable<Subject>
+      snackbarAlert: (m: string) => Chainable<Subject>
     }
   }
 }
@@ -38,4 +39,14 @@ Cypress.Commands.add('login', (username, password) => {
     },
     { cacheAcrossSpecs: true }
   )
+})
+
+Cypress.Commands.add('snackbarAlert', (text) => {
+  cy.get('.MuiSnackbar-root')
+    .should('be.visible')
+    .then(() => {
+      cy.get('.MuiSnackbarContent-root').should('contain', text)
+      cy.wait(4000)
+    })
+    .should('not.exist')
 })
