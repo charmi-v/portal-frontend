@@ -198,9 +198,20 @@ describe('User Account', { viewportWidth: 1500 }, () => {
 describe('Modify User Account', () => {
   beforeEach(() => {
     cy.login(Cypress.env('admin').email, Cypress.env('admin').password)
+
+    cy.intercept(
+      {
+        method: 'DELETE',
+        url: `${Cypress.env('backendUrl')}/api/administration/user/owncompany/users`,
+      },
+      {
+        fixture: 'userDeleted.json',
+      }
+    )
   })
 
   const userId = Cypress.env('user').id
+  const testUserId = Cypress.env('user').testid
 
   it('summary page of user details', () => {
     cy.visit(`${baseUrl}/userdetails/${userId}`)
@@ -264,6 +275,21 @@ describe('Modify User Account', () => {
     cy.get('button').filter(':contains("Change Portal Role")').click()
     cy.contains('label', 'App Developer').find('input[type="checkbox"]').click()
     cy.get('@SubmitBtn').should('not.be.disabled').click()
+  })
+
+  it('delete user - company user deletion', () => {
+    cy.visit(`${baseUrl}/userdetails/${testUserId}`)
+      .get('button')
+      .filter(':contains("Delete user")')
+      .click()
+
+    cy.get('h2').contains('Delete user account')
+    cy.get('h6').contains(
+      'Are you sure you want to delete the user account of userName LastName ?'
+    )
+
+    cy.get('.MuiDialog-container button').contains('Delete').click()
+    cy.get('h2').contains('User successfully deleted')
   })
 })
 
