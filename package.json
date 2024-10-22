@@ -67,6 +67,7 @@
     "sass": "^1.72.0"
   },
   "devDependencies": {
+    "@cypress/code-coverage": "^3.13.4",
     "@testing-library/dom": "^9.3.4",
     "@testing-library/jest-dom": "^6.4.8",
     "@testing-library/react": "^14.2.2",
@@ -99,11 +100,13 @@
     "identity-obj-proxy": "^3.0.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "nyc": "^17.1.0",
     "prettier": "^3.2.5",
     "ts-jest": "^29.1.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5",
     "vite": "^5.2.13",
+    "vite-plugin-istanbul": "^6.0.2",
     "vite-plugin-svgr": "^4.2.0",
     "vite-tsconfig-paths": "^4.3.2"
   },
@@ -123,6 +126,8 @@
     "publish:docker": "IMAGE=$npm_package_config_image && docker tag $IMAGE:latest $IMAGE:$npm_package_version && docker push $IMAGE:$npm_package_version && docker push $IMAGE:latest",
     "build:legal-notice": "bash scripts/legal-notice.sh",
     "build:copy-legal-info": "cp LICENSE NOTICE.md DEPENDENCIES SECURITY.md public/",
-    "cy:open": "cypress open"
+    "cy:open": "cypress open",
+    "cy:run": "npx cypress run chrome",
+    "cy:coverage": "npx nyc report --reporter=html"
   }
 }

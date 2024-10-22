@@ -11,6 +11,7 @@ storybook
 .DS_Store
 cypress.env.json
 cypress/downloads
+coverage
 
 # Add legal info files during build
 
