@@ -127,7 +127,6 @@
     "build:legal-notice": "bash scripts/legal-notice.sh",
     "build:copy-legal-info": "cp LICENSE NOTICE.md DEPENDENCIES SECURITY.md public/",
     "cy:open": "cypress open",
-    "cy:run": "npx cypress run chrome",
-    "cy:coverage": "npx nyc report --reporter=html"
+    "cy:coverage": "npx cypress run chrome && npx nyc report --reporter=html"
   }
 }

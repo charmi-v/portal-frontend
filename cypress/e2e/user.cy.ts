@@ -293,6 +293,78 @@ describe('Modify User Account', () => {
   })
 })
 
-describe('Technical User', () => {})
+describe('Technical User', () => {
+  // let clientId = ''
+  beforeEach(() => {
+    cy.login(Cypress.env('admin').email, Cypress.env('admin').password)
+    cy.intercept(
+      'POST',
+      `${Cypress.env('backendUrl')}/api/administration/serviceaccount/owncompany/serviceaccounts`,
+      {
+        fixture: 'newTechnicalUser.json',
+      }
+    )
+  })
+
+  const technicalid = Cypress.env('user').technicaltestuserid
+
+  it('validate overview details', () => {
+    cy.visit(`${baseUrl}/userManagement`)
+    cy.get('button')
+      .contains('technical User Management', { matchCase: false })
+      .click()
+
+    cy.url().should('equal', `${baseUrl}/technicalUserManagement`)
+    cy.get('h3').should('contain.text', 'Technical user management CX-Operator')
+
+    cy.get('.MuiDataGrid-root ').should('exist')
+    cy.get('.MuiDataGrid-root .MuiDataGrid-row').should('have.length', 10)
+    cy.get('.MuiDataGrid-root .MuiDataGrid-columnHeader').should(
+      'have.length',
+      8
+    )
+
+    cy.get('.MuiDataGrid-root .MuiDataGrid-row')
+      .first()
+      .find('.MuiDataGrid-cell')
+      .eq(7)
+      .should('be.visible')
+      .find('svg')
+      .should('be.visible')
+      .click()
+
+    cy.url().should('contain', `/techUserDetails/${technicalid}`)
+  })
+
+  it('should create a technical user', () => {
+    cy.visit(`${baseUrl}/technicalUserManagement`)
+    cy.contains('create technical user', { matchCase: false })
+      .should('be.visible')
+      .click()
+
+    cy.contains('h2', 'Technical User Creation')
+    cy.get('button').contains('Confirm').as('SubmitBtn')
+
+    cy.get('@SubmitBtn').click()
+    cy.contains('Please enter a description')
+    cy.contains('Please select a value.')
+
+    cy.get('textarea[placeholder=\'Username*\']').type('userName')
+    cy.get('textarea[placeholder=\'Description*\']').type(
+      'assiging permission to test user'
+    )
+    cy.get('[type="radio"]').first().check()
+    cy.get('@SubmitBtn').click()
+
+    cy.get('h2').contains('Technical User Creation')
+    // cy.get('.MuiDialogContent-root li').first().
+  })
+
+  it.only('should delete a technical user', () => {
+    cy.visit(`${baseUrl}/technicalUserManagement`)
+    // TODO: delete the newly created user
+    // console.log({clientId})
+  })
+})
 
 describe('Assign App Roles', () => {})

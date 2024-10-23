@@ -32,7 +32,7 @@ export default defineConfig({
     istanbul({
       include: 'src/*',
       exclude: ['node_modules', 'test/'],
-      extension: ['.js', '.ts', '.vue'],
+      extension: ['.tsx', '.ts'],
       requireEnv: false,
     }),
   ],

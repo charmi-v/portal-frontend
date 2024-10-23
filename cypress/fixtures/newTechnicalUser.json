@@ -1,0 +1,17 @@
+{
+  "serviceAccountId": "12345678-3206-4442-8214-7006cf1e03d4",
+  "clientId": "sa24",
+  "name": "userName",
+  "description": "assiging permission to test user",
+  "authenticationType": "SECRET",
+  "roles": [
+    {
+      "roleId": "34c42896-a003-4653-af8f-user-role-id",
+      "clientId": "technical_roles_management",
+      "roleName": "Registration External"
+    }
+  ],
+  "companyServiceAccountTypeId": "OWN",
+  "secret": "secret-code",
+  "subscriptionId": null
+}
