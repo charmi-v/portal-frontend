@@ -294,16 +294,23 @@ describe('Modify User Account', () => {
 })
 
 describe('Technical User', () => {
-  // let clientId = ''
+  let newTechnicalClientId = ''
   beforeEach(() => {
     cy.login(Cypress.env('admin').email, Cypress.env('admin').password)
-    cy.intercept(
-      'POST',
-      `${Cypress.env('backendUrl')}/api/administration/serviceaccount/owncompany/serviceaccounts`,
-      {
-        fixture: 'newTechnicalUser.json',
-      }
-    )
+
+    //uncomment for frontend testing only
+    // cy.intercept(
+    //   'POST',
+    //   `${Cypress.env('backendUrl')}/api/administration/serviceaccount/owncompany/serviceaccounts`,
+    //   {
+    //     fixture: 'newTechnicalUser.json',
+    //   }
+    // )
+    // cy.intercept(
+    //   'DELETE',
+    //   `${Cypress.env('backendUrl')}/api/administration/serviceaccount/owncompany/serviceaccounts/12345678-3206-4442-8214-7006cf1e03d4`,
+    //   {}
+    // )
   })
 
   const technicalid = Cypress.env('user').technicaltestuserid
@@ -356,14 +363,51 @@ describe('Technical User', () => {
     cy.get('[type="radio"]').first().check()
     cy.get('@SubmitBtn').click()
 
-    cy.get('h2').contains('Technical User Creation')
-    // cy.get('.MuiDialogContent-root li').first().
+    cy.get('h4').contains(
+      'Congratulations, the technical user got successfully created'
+    )
+    cy.get('.MuiDialogContent-root li')
+      .first()
+      .children()
+      .eq(0)
+      .should('have.text', 'Client ID:')
+    cy.get('.MuiDialogContent-root li')
+      .first()
+      .children()
+      .eq(1)
+      .invoke('text')
+      .then((val) => (newTechnicalClientId = val))
   })
 
-  it.only('should delete a technical user', () => {
+  it('should delete a technical user', () => {
     cy.visit(`${baseUrl}/technicalUserManagement`)
-    // TODO: delete the newly created user
-    // console.log({clientId})
+    cy.intercept(
+      `${Cypress.env('backendUrl')}/api/administration/serviceaccount/owncompany/serviceaccounts?size=10&page=0`
+    ).as('accountList')
+
+    cy.wait('@accountList')
+
+    cy.get('.MuiDataGrid-root .MuiCircularProgress-root').should('not.exist')
+    cy.get('.MuiDataGrid-root input[placeholder="Search by client Id"]').type(
+      newTechnicalClientId,
+      { force: true }
+    )
+
+    cy.get('.MuiDataGrid-root .MuiDataGrid-row').should('have.length', 1)
+
+    cy.get('.MuiDataGrid-root .MuiDataGrid-row')
+      .first()
+      .find('.MuiDataGrid-cell')
+      .eq(7)
+      .should('be.visible')
+      .find('svg')
+      .should('be.visible')
+      .click()
+
+    cy.get('button').contains('Delete this technical User').click()
+    cy.get('.MuiDialog-container button').contains('Delete').click()
+
+    cy.contains('User deletion was successful.')
   })
 })
 
