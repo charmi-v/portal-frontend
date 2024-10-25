@@ -293,24 +293,31 @@ describe('Modify User Account', () => {
   })
 })
 
-describe('Technical User', () => {
+describe.only('Technical User', () => {
   let newTechnicalClientId = ''
   beforeEach(() => {
     cy.login(Cypress.env('admin').email, Cypress.env('admin').password)
 
-    //uncomment for frontend testing only
-    // cy.intercept(
-    //   'POST',
-    //   `${Cypress.env('backendUrl')}/api/administration/serviceaccount/owncompany/serviceaccounts`,
-    //   {
-    //     fixture: 'newTechnicalUser.json',
-    //   }
-    // )
-    // cy.intercept(
-    //   'DELETE',
-    //   `${Cypress.env('backendUrl')}/api/administration/serviceaccount/owncompany/serviceaccounts/12345678-3206-4442-8214-7006cf1e03d4`,
-    //   {}
-    // )
+    //comment for live frontend testing
+    cy.intercept(
+      'POST',
+      `${Cypress.env('backendUrl')}/api/administration/serviceaccount/owncompany/serviceaccounts`,
+      {
+        fixture: 'newTechnicalUser.json',
+      }
+    )
+    cy.intercept(
+      'DELETE',
+      `${Cypress.env('backendUrl')}/api/administration/serviceaccount/owncompany/serviceaccounts/bd23f3af-5b06-4aca-9f7f-f295de737c45`,
+      {}
+    )
+    cy.intercept(
+      'POST',
+      `${Cypress.env('backendUrl')}/api/administration/serviceaccount/owncompany/serviceaccounts/bd23f3af-5b06-4aca-9f7f-f295de737c45/resetCredentials`,
+      {
+        fixture: 'resetCredentialTechnicalUser.json',
+      }
+    )
   })
 
   const technicalid = Cypress.env('user').technicaltestuserid
@@ -377,6 +384,35 @@ describe('Technical User', () => {
       .eq(1)
       .invoke('text')
       .then((val) => (newTechnicalClientId = val))
+  })
+
+  it('reset credentials of the technical user', () => {
+    cy.visit(`${baseUrl}/technicalUserManagement`)
+    cy.intercept(
+      `${Cypress.env('backendUrl')}/api/administration/serviceaccount/owncompany/serviceaccounts?size=10&page=0`
+    ).as('accountList')
+
+    cy.wait('@accountList')
+
+    cy.get('.MuiDataGrid-root .MuiCircularProgress-root').should('not.exist')
+    cy.get('.MuiDataGrid-root input[placeholder="Search by client Id"]').type(
+      newTechnicalClientId,
+      { force: true }
+    )
+
+    cy.get('.MuiDataGrid-root .MuiDataGrid-row').should('have.length', 1)
+
+    cy.get('.MuiDataGrid-root .MuiDataGrid-row')
+      .first()
+      .find('.MuiDataGrid-cell')
+      .eq(7)
+      .should('be.visible')
+      .find('svg')
+      .should('be.visible')
+      .click()
+
+    cy.get('button').contains('Credential Reset').click()
+    cy.snackbarAlert('Credential reset was successful')
   })
 
   it('should delete a technical user', () => {
