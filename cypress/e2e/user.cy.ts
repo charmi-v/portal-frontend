@@ -293,7 +293,7 @@ describe('Modify User Account', () => {
   })
 })
 
-describe.only('Technical User', () => {
+describe('Technical User', () => {
   let newTechnicalClientId = ''
   beforeEach(() => {
     cy.login(Cypress.env('admin').email, Cypress.env('admin').password)
@@ -447,4 +447,64 @@ describe.only('Technical User', () => {
   })
 })
 
-describe('Assign App Roles', () => {})
+describe('Assign App Roles', () => {
+  const activeAppId = Cypress.env('activeApp').id
+  const activeAppName = Cypress.env('activeApp').name
+  beforeEach(() => {
+    cy.login(Cypress.env('admin').email, Cypress.env('admin').password)
+  })
+
+  it('validate the app access management overview', () => {
+    cy.visit(`${baseUrl}/userManagement`)
+    cy.get('button').contains('access management', { matchCase: false }).click()
+
+    cy.get('#access-management-id').then(() => {
+      cy.get('.slick-slide h5').contains(activeAppName).click()
+    })
+
+    cy.url().should('equal', `${baseUrl}/appUserManagement/${activeAppId}`)
+  })
+
+  it('assign user app roles', () => {
+    cy.visit(`${baseUrl}/appUserManagement/${activeAppId}`)
+    cy.get('button').contains('add role', { matchCase: false }).click()
+
+    cy.get('[role="dialog"]')
+      .should('be.visible')
+      .and('contain.text', 'Assign app roles to your user(s)')
+      .within(() => {
+        cy.get('.stepperStep').should('have.length', 2)
+        cy.get('.stepperStep').contains('Search & Select Users')
+        cy.get('.stepperStep').contains('Add Roles')
+
+        cy.get('button').contains('Confirm selected users').as('ConfirmUserBtn')
+
+        cy.get('@ConfirmUserBtn').should('be.disabled')
+        cy.wait(1000)
+
+        cy.get('button [data-testid="SearchIcon"]').click()
+        cy.get('input[placeholder="Enter email to search"]').type('charmi')
+
+        cy.get('.MuiDataGrid-row').should('have.length', 1)
+        cy.get('input[type=checkbox]').check()
+
+        cy.get('@ConfirmUserBtn').should('not.be.disabled').click()
+
+        cy.get('button').contains('Confirm selected roles').as('ConfirmRoleBtn')
+        cy.get('@ConfirmRoleBtn').should('be.disabled')
+        cy.contains('label', 'User').find('input[type=checkbox]').check()
+        cy.get('@ConfirmRoleBtn').should('not.be.disabled').click()
+      })
+
+    cy.get('[role="dialog"] h4')
+      .should('be.visible')
+      .invoke('text')
+      .then((text) => {
+        expect(text).to.match(
+          /Roles got successfully updated.|Roles have not got updated./
+        )
+      })
+  })
+
+  it('update users assigned app roles', () => {})
+})
