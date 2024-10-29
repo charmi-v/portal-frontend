@@ -2,6 +2,8 @@
 
 const baseUrl = Cypress.env('baseUrl')
 const userEmail = Cypress.env('user').email
+const userId = Cypress.env('user').id
+const searchUser = Cypress.env('user').search
 
 describe('User Account', { viewportWidth: 1500 }, () => {
   beforeEach(() => {
@@ -45,7 +47,7 @@ describe('User Account', { viewportWidth: 1500 }, () => {
     // search the account & navigate to user details page
     cy.wait(1000)
     cy.get('#identity-management-id [data-testid="SearchIcon"]').click()
-    cy.get('input[placeholder="Enter email to search"]').type('charmi')
+    cy.get('input[placeholder="Enter email to search"]').type(searchUser)
     cy.contains(' .MuiDataGrid-row', userEmail)
       .find('[data-field="details"] button')
       .click()
@@ -483,7 +485,7 @@ describe('Assign App Roles', () => {
         cy.wait(1000)
 
         cy.get('button [data-testid="SearchIcon"]').click()
-        cy.get('input[placeholder="Enter email to search"]').type('charmi')
+        cy.get('input[placeholder="Enter email to search"]').type(searchUser)
 
         cy.get('.MuiDataGrid-row').should('have.length', 1)
         cy.get('input[type=checkbox]').check()
@@ -492,7 +494,7 @@ describe('Assign App Roles', () => {
 
         cy.get('button').contains('Confirm selected roles').as('ConfirmRoleBtn')
         cy.get('@ConfirmRoleBtn').should('be.disabled')
-        cy.contains('label', 'User').find('input[type=checkbox]').check()
+        cy.get('label').find('input[type=checkbox]').eq(0).check()
         cy.get('@ConfirmRoleBtn').should('not.be.disabled').click()
       })
 
@@ -506,5 +508,56 @@ describe('Assign App Roles', () => {
       })
   })
 
-  it('update users assigned app roles', () => {})
+  it('update users assigned app roles', () => {
+    cy.visit(`${baseUrl}/appUserManagement/${activeAppId}`)
+
+    cy.intercept(
+      'PUT',
+      `${Cypress.env('backendUrl')}/api/administration/user/owncompany/users/${userId}/apps/${activeAppId}/roles`
+    ).as('submitRequest')
+    cy.intercept(
+      'GET',
+      `${Cypress.env('backendUrl')}/api/administration/user/owncompany/users/${userId}`
+    ).as('userListRequest')
+
+    cy.get('#identity-management-id [data-testid="SearchIcon"]')
+      .as('SearchBtn')
+      .should('exist')
+
+    cy.get('.MuiDataGrid-root .MuiCircularProgress-root').should('not.exist')
+    cy.get('@SearchBtn').click()
+    cy.get('input[placeholder="Enter email to search"]').type(searchUser)
+    cy.contains(' .MuiDataGrid-row', userEmail)
+      .find('[data-field="details"] button')
+      .click()
+
+    cy.get('[role="dialog"]')
+      .as('dialogRoleSelection')
+      .should('be.visible')
+      .and('contain.text', `Manage roles for ${activeAppName}`)
+      .within(() => {
+        cy.get('button').contains('Confirm').and('be.disabled')
+        cy.get('label').find('input[type=checkbox]').eq(0).uncheck()
+
+        cy.get('button').contains('Confirm').and('not.be.disabled').click()
+      })
+    cy.wait('@submitRequest').then((interception) => {
+      expect(interception.response?.statusCode).to.equal(200)
+    })
+    cy.wait('@userListRequest').then((interception) => {
+      expect(interception.response?.statusCode).to.equal(200)
+    })
+    cy.get('[role="dialog"]').should(
+      'not.contain.text',
+      `Manage roles for ${activeAppName}`
+    )
+    cy.get('[role="dialog"] h4')
+      .should('be.visible')
+      .invoke('text')
+      .then((text) => {
+        expect(text).to.match(
+          /Roles got successfully updated.|Roles have not got updated./
+        )
+      })
+  })
 })
