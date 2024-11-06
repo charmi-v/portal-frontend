@@ -2,7 +2,7 @@
 
 describe('Validate authentication for home page', () => {
   beforeEach(() => {
-    cy.login(Cypress.env('user').email, Cypress.env('user').password)
+    cy.login('user')
   })
 
   it('should visit home page after login', () => {

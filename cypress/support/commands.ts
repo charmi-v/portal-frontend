@@ -4,16 +4,16 @@ export {}
 declare global {
   namespace Cypress {
     interface Chainable<Subject> {
-      login: (u: string, p: string) => Chainable<Subject>
+      login: (userType: string) => Chainable<Subject>
       snackbarAlert: (m: string) => Chainable<Subject>
     }
   }
 }
 
-Cypress.Commands.add('login', (username, password) => {
+Cypress.Commands.add('login', (usertype) => {
   // creating a session for user login
   cy.session(
-    [username, password],
+    [usertype],
     () => {
       cy.visit(Cypress.env('baseUrl'))
 
@@ -29,10 +29,18 @@ Cypress.Commands.add('login', (username, password) => {
 
       cy.origin(
         Cypress.env('keycloak').sharedUrl,
-        { args: { username, password } },
-        ({ username, password }) => {
-          cy.get('#username').should('exist').type(username)
-          cy.get('#password').type(password)
+        { args: { usertype } },
+        ({ usertype }) => {
+          const currentUsername =
+            usertype === 'admin'
+              ? Cypress.env('admin').email
+              : Cypress.env('user').email
+          const currentPassword =
+            usertype === 'admin'
+              ? Cypress.env('admin').password
+              : Cypress.env('user').password
+          cy.get('#username').should('exist').type(currentUsername)
+          cy.get('#password').type(currentPassword)
           cy.get('#kc-login').click() // Submit the Keycloak form
         }
       )
@@ -46,7 +54,7 @@ Cypress.Commands.add('snackbarAlert', (text) => {
     .should('be.visible')
     .then(() => {
       cy.get('.MuiSnackbarContent-root').should('contain', text)
-      cy.wait(4000)
+      cy.wait(7000)
     })
     .should('not.exist')
 })

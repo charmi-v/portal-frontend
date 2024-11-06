@@ -5,9 +5,11 @@ const userEmail = Cypress.env('user').email
 const userId = Cypress.env('user').id
 const searchUser = Cypress.env('user').search
 
-describe('User Account', { viewportWidth: 1500 }, () => {
+describe('User Account', { viewportWidth: 1500, viewportHeight: 1000 }, () => {
   beforeEach(() => {
-    cy.login(Cypress.env('admin').email, Cypress.env('admin').password)
+    cy.login('admin')
+
+    //mock single new user response
     cy.intercept(
       'POST',
       `${Cypress.env('backendUrl')}/api/administration/user/owncompany/users`,
@@ -15,6 +17,8 @@ describe('User Account', { viewportWidth: 1500 }, () => {
         fixture: 'newUser.json',
       }
     )
+
+    //mock bulk new users response
     cy.intercept(
       {
         method: 'POST',
@@ -28,31 +32,44 @@ describe('User Account', { viewportWidth: 1500 }, () => {
   })
 
   it('view company user accounts', () => {
+    cy.intercept({
+      method: 'GET',
+      url: new RegExp(
+        `${Cypress.env('backendUrl')}/api/administration/user/owncompany/users\\?status=ACTIVE&size=10&page=\\d+&email=`
+      ),
+    }).as('userListRequest')
+
     // redirect to user management page using navigation menu
     cy.visit(baseUrl)
-      .get('.cx-avatar .MuiSvgIcon-root[data-testid="PersonOutlineIcon"]')
+      .get('[data-testid="PersonOutlineIcon"]')
       .click()
       .get('.cx-menu a')
       .contains('User Management')
       .click()
 
     // validating the page url
-    cy.url()
-      .should('equal', `${baseUrl}/userManagement`)
-      .get('#identity-management-id')
-      .should('exist')
-      .get('.MuiCircularProgress-root')
-      .should('not.exist')
+    cy.url().should('equal', `${baseUrl}/userManagement`)
 
-    // search the account & navigate to user details page
-    cy.wait(1000)
-    cy.get('#identity-management-id [data-testid="SearchIcon"]').click()
-    cy.get('input[placeholder="Enter email to search"]').type(searchUser)
-    cy.contains(' .MuiDataGrid-row', userEmail)
-      .find('[data-field="details"] button')
-      .click()
-      .url()
-      .should('include', '/userdetails')
+    cy.get('#identity-management-id').within(() => {
+      cy.wait('@userListRequest')
+      cy.get('.MuiCircularProgress-root').should('not.exist')
+      cy.get('[data-testid="SearchIcon"]').as('SearchBtn')
+
+      cy.get('.cx-table').scrollIntoView()
+      cy.wait('@userListRequest')
+      cy.wait(2000)
+      cy.get('@SearchBtn').click()
+
+      cy.get('input[placeholder="Enter email to search"]')
+        .should('be.visible')
+        .type(searchUser)
+
+      cy.contains(' .MuiDataGrid-row', userEmail)
+        .find('[data-field="details"] button')
+        .click()
+        .url()
+        .should('include', '/userdetails')
+    })
   })
 
   it('create a new user account (single user)', () => {
@@ -199,7 +216,7 @@ describe('User Account', { viewportWidth: 1500 }, () => {
 
 describe('Modify User Account', () => {
   beforeEach(() => {
-    cy.login(Cypress.env('admin').email, Cypress.env('admin').password)
+    cy.login('admin')
 
     cy.intercept(
       {
@@ -298,7 +315,7 @@ describe('Modify User Account', () => {
 describe('Technical User', () => {
   let newTechnicalClientId = ''
   beforeEach(() => {
-    cy.login(Cypress.env('admin').email, Cypress.env('admin').password)
+    cy.login('admin')
 
     //comment for live frontend testing
     cy.intercept(
@@ -453,7 +470,7 @@ describe('Assign App Roles', () => {
   const activeAppId = Cypress.env('activeApp').id
   const activeAppName = Cypress.env('activeApp').name
   beforeEach(() => {
-    cy.login(Cypress.env('admin').email, Cypress.env('admin').password)
+    cy.login('admin')
   })
 
   it('validate the app access management overview', () => {
@@ -541,11 +558,12 @@ describe('Assign App Roles', () => {
 
         cy.get('button').contains('Confirm').and('not.be.disabled').click()
       })
-    cy.wait('@submitRequest').then((interception) => {
-      expect(interception.response?.statusCode).to.equal(200)
+
+    cy.wait('@submitRequest').should((interception) => {
+      expect(interception.response?.statusCode).to.eq(200)
     })
-    cy.wait('@userListRequest').then((interception) => {
-      expect(interception.response?.statusCode).to.equal(200)
+    cy.wait('@userListRequest').should((interception) => {
+      expect(interception.response?.statusCode).to.eq(200)
     })
     cy.get('[role="dialog"]').should(
       'not.contain.text',
