@@ -12,6 +12,7 @@ storybook
 cypress.env.json
 cypress/downloads
 coverage
+.nyc_output
 
 # Add legal info files during build
 
